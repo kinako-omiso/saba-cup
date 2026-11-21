@@ -29,10 +29,12 @@ class Game:
 
     def __init__(self):
 
+        ## jsonファイルから本の情報を読み込む
         with (Path(__file__).with_name("data") / "books.json").open(encoding="utf-8") as books_file:
             self.books = [Book(**book) for book in json.load(books_file)]
         random.shuffle(self.books)
         self.book_index = 0
+        ## jsonファイルから本の情報を読み込む処理はここまで
 
         pyxel.init(setting.GAME_WINDOW_WIDTH, setting.GAME_WINDOW_HIGH, title=setting.TITLE_NAME)
 
