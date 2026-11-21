@@ -18,6 +18,9 @@ class Book:
     description: str
     opening_hint: str
     famous_passage_hint: str
+    x: int = 0
+    y: int = 0
+    assets: str | None = None
 
 
 class Game:
@@ -51,20 +54,16 @@ class Game:
 
 
     def update(self):
-        for name, b in self.test_buttons.items():
-            b.update()
-
         self.player_1.update()
         self.player_2.update()
 
         # シーン別処理
         if self.state == self.TITLE:
+            for b in self.test_buttons.values():
+                b.update()
             if self.test_buttons["one"].pushed != 0:
-                print("PUSHED", self.test_buttons["one"].pushed)
+                GameScene.setup(self)
                 self.state = self.BATTLE
-                self.player_select_setup()
-        elif self.state == self.BATTLE:
-            GameScene.update(self)
 
 
 
@@ -74,16 +73,18 @@ class Game:
 
     def draw(self):
         pyxel.cls(0)
-        for name, b in self.test_buttons.items():
-            b.draw()
-        pyxel.circb(self.player_1.x, self.player_1.y, 10, 3)
-        pyxel.circb(self.player_2.x, self.player_2.y, 10, 8)
 
         # シーン別処理
         if self.state == self.TITLE:
+            for b in self.test_buttons.values():
+                b.draw()
             pyxel.text(300 - len("TITLE"), 50, "TITLE", pyxel.rndi(0,15))
         elif self.state == self.BATTLE:
             pyxel.text(300 - len("BATTLE"), 50, "BATTLE", pyxel.rndi(0,15))
+            GameScene.draw(self)
+
+        pyxel.circb(self.player_1.x, self.player_1.y, 10, 3)
+        pyxel.circb(self.player_2.x, self.player_2.y, 10, 8)
 
 
         # if pyxel.btn(pyxel.GAMEPAD1_BUTTON_A):
@@ -97,11 +98,5 @@ class Game:
         self.test_buttons = {
             "one" : button.Button(250, 275, 100, 50, [self.player_1, self.player_2]),
         }
-
-    def player_select_setup(self):
-        self.test_buttons = {
-            "one" : button.Button(450, 275, 100, 50, [self.player_1, self.player_2]),
-        }
-
 
 Game()
