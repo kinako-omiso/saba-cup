@@ -64,6 +64,8 @@ class Game:
             if self.test_buttons["one"].pushed != 0:
                 GameScene.setup(self)
                 self.state = self.BATTLE
+        elif self.state == self.BATTLE:
+            GameScene.update(self)
 
 
 
