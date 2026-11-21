@@ -1,7 +1,23 @@
+import json
+import random
+from dataclasses import dataclass
+from pathlib import Path
+
 import pyxel
+import GameScene
 import setting
 import player
 import button
+
+
+@dataclass
+class Book:
+    id: int
+    title: str
+    author: str
+    description: str
+    opening_hint: str
+    famous_passage_hint: str
 
 
 class Game:
@@ -9,8 +25,14 @@ class Game:
     # ここにシーンを設定
     TITLE = 0
     BATTLE = 1
+    RESULT = 2
 
     def __init__(self):
+
+        with (Path(__file__).with_name("data") / "books.json").open(encoding="utf-8") as books_file:
+            self.books = [Book(**book) for book in json.load(books_file)]
+        random.shuffle(self.books)
+        self.book_index = 0
 
         pyxel.init(setting.GAME_WINDOW_WIDTH, setting.GAME_WINDOW_HIGH, title=setting.TITLE_NAME)
 
@@ -40,10 +62,7 @@ class Game:
                 self.state = self.BATTLE
                 self.player_select_setup()
         elif self.state == self.BATTLE:
-            if self.test_buttons["one"].pushed != 0:
-                print("PUSHED", self.test_buttons["one"].pushed)
-                self.state = self.TITLE
-                self.title_setup()
+            GameScene.update(self)
 
 
 
