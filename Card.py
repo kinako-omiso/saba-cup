@@ -1,5 +1,11 @@
 import pyxel
 
+from advanced_textbox import FONT_PATH
+
+
+TITLE_FONT_SIZE = 10
+title_font = pyxel.Font(FONT_PATH, TITLE_FONT_SIZE)
+
 
 class Card:
     WIDTH = 88
@@ -13,6 +19,10 @@ class Card:
     def draw(self):
         # TODO(#8): JSONのassetsに指定されたパスからカード画像を読み込んで描画する。
         pyxel.rect(self.x, self.y, self.WIDTH, self.HEIGHT, 13)
+        title = self.book.title
+        title_x = self.x + (self.WIDTH - title_font.text_width(title)) // 2
+        title_y = self.y + (self.HEIGHT - TITLE_FONT_SIZE) // 2
+        pyxel.text(title_x, title_y, title, 7, title_font)
 
     def contains(self, x, y):
         return self.x <= x < self.x + self.WIDTH and self.y <= y < self.y + self.HEIGHT

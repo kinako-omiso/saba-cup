@@ -1,6 +1,7 @@
 import pyxel
 
-normal_font = pyxel.Font("fonts/PixelMplus12-Regular.ttf", 12)
+FONT_PATH = "fonts/PixelMplus12-Regular.ttf"
+normal_font = pyxel.Font(FONT_PATH, 12)
 
 
 class AdvancedTextBox:
@@ -16,7 +17,7 @@ class AdvancedTextBox:
         self.text_counter = 0
         self.c = c
         self.size = size
-        self.s = s
+        self.s = s ## 表示するフレーム間隔
         self.back_c = back_c
         self.auto_pagination = auto
 
