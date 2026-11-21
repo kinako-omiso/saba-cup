@@ -11,6 +11,7 @@ class Card:
         self.y = y
 
     def draw(self):
+        # TODO(#8): JSONのassetsに指定されたパスからカード画像を読み込んで描画する。
         pyxel.rect(self.x, self.y, self.WIDTH, self.HEIGHT, 13)
 
     def contains(self, x, y):

@@ -18,8 +18,6 @@ class Book:
     description: str
     opening_hint: str
     famous_passage_hint: str
-    x: int = 0
-    y: int = 0
     assets: str | None = None
 
 
