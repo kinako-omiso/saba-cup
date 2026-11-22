@@ -1,7 +1,7 @@
 import pyxel
+import setting
 
-FONT_PATH = "fonts/PixelMplus12-Regular.ttf"
-normal_font = pyxel.Font(FONT_PATH, 12)
+normal_font = pyxel.Font(str(setting.FONT_PATH), 12)
 
 
 class AdvancedTextBox:

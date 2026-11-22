@@ -38,10 +38,7 @@ class Card:
                 self.y + (self.HEIGHT - height) / 2,
                 self.cover, 0, 0, width, height, scale=scale,
             )
-            if self.book.assets == "assets/ryouri-ten-title.png":
-                return
-            band_height = 3 + len(self.title_lines) * TITLE_LINE_HEIGHT
-            pyxel.rect(self.x, self.y, self.TITLE_BAND_WIDTH, band_height, self.color)
+            return
 
         for index, line in enumerate(self.title_lines):
             title_y = self.y + 3 + index * TITLE_LINE_HEIGHT

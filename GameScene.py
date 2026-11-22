@@ -3,19 +3,23 @@ import random
 import pyxel
 
 from Card import Card
-from advanced_textbox import AdvancedTextBox, FONT_PATH, normal_font
-from setting import GAME_WINDOW_WIDTH, PLAYER_COLORS
+from advanced_textbox import AdvancedTextBox, normal_font
+from setting import BASE_PATH, FONT_PATH, FPS, GAME_WINDOW_HIGH, GAME_WINDOW_WIDTH, PLAYER_COLORS
 
 
 CARDS_PER_ROW = 5
 CARD_ROWS = 2
 CARD_GAP = 12
-FIRST_CARD_Y = 150
+BATTLE_WIDTH = 588
+BATTLE_HEIGHT = 441
+BATTLE_X = (GAME_WINDOW_WIDTH - BATTLE_WIDTH) // 2
+BATTLE_Y = (GAME_WINDOW_HIGH - BATTLE_HEIGHT) // 2
+FIRST_CARD_Y = BATTLE_Y + 150
 CARD_ROW_STEP = Card.HEIGHT + CARD_GAP
 HINT_LABELS = ("ヒント1", "ヒント2", "答え")
-HINT_PAUSE_FRAMES = 150
-READING_PANEL = (20, 16, 440, 116)
-SCORE_PANEL = (472, 16, 96, 116)
+HINT_PAUSE_FRAMES = FPS * 5
+READING_PANEL = (BATTLE_X + 20, BATTLE_Y + 16, 440, 116)
+SCORE_PANEL = (BATTLE_X + 472, BATTLE_Y + 16, 96, 116)
 PALETTE_LIMIT = 256
 
 BATTLE_PALETTE = [
@@ -24,8 +28,8 @@ BATTLE_PALETTE = [
 ]
 BACKGROUND, SHELF, WOOD, PAPER = range(16, 20)
 COVER_COLORS = (20, 21, 22, 23, 24, PAPER, WOOD)
-reading_font = pyxel.Font(FONT_PATH, 16)
-score_font = pyxel.Font(FONT_PATH, 20)
+reading_font = pyxel.Font(str(FONT_PATH), 16)
+score_font = pyxel.Font(str(FONT_PATH), 20)
 
 
 def load_covers(books):
@@ -55,7 +59,7 @@ def setup(game):
     panel_x, panel_y, panel_width, _ = READING_PANEL
     game.reading_box = AdvancedTextBox(
         panel_x + 12, panel_y + 27, panel_width - 24, 88,
-        BACKGROUND, 1, back_c=PAPER, auto=False,
+        BACKGROUND, 1, s=FPS // 2, back_c=PAPER, auto=False,
         font=reading_font, line_height=17, left_aligned=True,
     )
     if game.books:
@@ -68,7 +72,7 @@ def setup(game):
 
 def _load_cover(assets, *, include_colors=False):
     try:
-        return pyxel.Image.from_image(assets, include_colors=include_colors)
+        return pyxel.Image.from_image(str(BASE_PATH / assets), include_colors=include_colors)
     except Exception:
         return None
 
@@ -174,7 +178,8 @@ def draw(game):
         score_right = score_x + score_width - 10
         pyxel.text(score_right - score_font.text_width(score), row_y, score, color, score_font)
 
-    shelf_x, shelf_y, shelf_width, shelf_height = 28, 136, GAME_WINDOW_WIDTH - 56, 291
+    shelf_x, shelf_y = BATTLE_X + 28, BATTLE_Y + 136
+    shelf_width, shelf_height = BATTLE_WIDTH - 56, 291
     pyxel.rect(shelf_x, shelf_y, 8, shelf_height, WOOD)
     pyxel.rect(shelf_x + shelf_width - 8, shelf_y, 8, shelf_height, WOOD)
     pyxel.rect(shelf_x, shelf_y, shelf_width, 8, SHELF)
