@@ -1,6 +1,7 @@
 import pyxel
 import setting
 import advanced_textbox
+import button
 
 
 result_text_box = None
@@ -23,7 +24,7 @@ max_count = 0
 def update():
     pass
 
-def draw(score_1, score_2):
+def draw(game, score_1, score_2):
 
     global fg_once
     global result_text_box
@@ -35,6 +36,12 @@ def draw(score_1, score_2):
     global score_2_box
 
     if fg_once:
+        game.test_buttons = {
+            "retry" : button.Button(setting.GAME_WINDOW_WIDTH/4 -120, setting.GAME_WINDOW_HIGH/4*3,
+                                    240, 80, [game.player_1, game.player_2], [], False),
+            "quit" : button.Button(setting.GAME_WINDOW_WIDTH/4*3 -120, setting.GAME_WINDOW_HIGH/4*3,
+                                    240, 80, [game.player_1, game.player_2], [], False),
+        }
         score_1_box = advanced_textbox.AdvancedTextBox(setting.GAME_WINDOW_WIDTH/4 ,
                                                        setting.GAME_WINDOW_HIGH/2,
                                                        len(str(score_1))*12 + 2, 14, 10, 6, 1, 0, False)
@@ -67,13 +74,20 @@ def draw(score_1, score_2):
             result_text_box.set_text(result)
             result_text_box.text_use_x += 2
 
-        max_count = len(result)
+        max_count = len(result) + 30
         fg_once = False
 
     count += 1
 
-    if count == 8:
+    if count < 30 :
+     pyxel.rect(0,0,setting.GAME_WINDOW_WIDTH, setting.GAME_WINDOW_HIGH / 30 * count, 0)
+
+    if count == 38:
         result_text_box.c = 10
+
+    if count > 30:
+        result_text_box.update()
+        result_text_box.draw()
 
     if count >= max_count:
         player_1_box.update()
@@ -86,8 +100,16 @@ def draw(score_1, score_2):
         score_2_box.update()
         score_1_box.draw()
         score_2_box.draw()
+
+    if count == max_count + 17:
+        for name, b in game.test_buttons.items():
+            b.act = True
+
+
+
+
+    
+    
     
 
-    result_text_box.update()
-    result_text_box.draw()
         
