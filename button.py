@@ -4,7 +4,7 @@ import ui
 class Button:
     BOTH_PLAYERS = 3
 
-    def __init__(self, x, y, w, h, user, img=[], act=True, label="", align="left", valign="top", label_scale=2):
+    def __init__(self, x, y, w, h, user, img=None, act=True, label="", align="left", valign="top", label_scale=2):
 
         self.x, self.y = ui.aligned_position(x, y, w, h, align, valign)
         self.w = w
@@ -40,14 +40,18 @@ class Button:
 
 
     def draw(self):
+        if self.act:
+            if self.ui_is_on:
+                color = 10 if self.label else pyxel.rndi(0, 15)
+                pyxel.rectb(self.x - 1, self.y - 1, self.w + 2, self.h + 2, color)
 
-        if self.ui_is_on:
-            pyxel.rectb(self.x - 1, self.y - 1, self.w + 2, self.h + 2, 10)
-        
-        if self.img == []:
-            pyxel.rect(self.x, self.y, self.w, self.h, 4)
-        pyxel.rectb(self.x, self.y, self.w, self.h, 15)
-        if self.label:
-            n = self.label_scale
-            ui.draw_text(self.x + self.w // 2, self.y + self.h // 2, n, self.label, 7,
-                         align="center", valign="center")
+            if self.img is None:
+                pyxel.rect(self.x, self.y, self.w, self.h, 4 if self.label else 13)
+            else:
+                pyxel.blt(self.x, self.y, self.img, 0, 0, self.w, self.h)
+
+            if self.label:
+                pyxel.rectb(self.x, self.y, self.w, self.h, 15)
+                n = self.label_scale
+                ui.draw_text(self.x + self.w // 2, self.y + self.h // 2, n, self.label, 7,
+                             align="center", valign="center")

@@ -10,6 +10,7 @@ import ui_title
 import setting
 import player
 import button
+import ResultScene
 
 
 @dataclass
@@ -42,7 +43,6 @@ class Game:
         pyxel.init(setting.GAME_WINDOW_WIDTH, setting.GAME_WINDOW_HIGH,
                    title=setting.TITLE_NAME, fps=setting.FPS)
 
-        self.state = self.TITLE
         self.player_1 = player.Player(self, 1)
         self.player_2 = player.Player(self, 2)
 
@@ -62,15 +62,17 @@ class Game:
             for b in self.buttons.values():
                 b.update()
             if self.buttons["start"].pushed != 0:
-                GameScene.setup(self)
-                self.state = self.BATTLE
+                self.battle_setup()
         elif self.state == self.BATTLE:
-            GameScene.update(self)
+            if GameScene.update(self):
+                ResultScene.setup(self)
+                self.state = self.RESULT
+        elif self.state == self.RESULT:
+            ResultScene.result_update(self)
 
 
 
 
-      
 
 
     def draw(self):
@@ -83,6 +85,8 @@ class Game:
             if self.state == self.BATTLE:
                 pyxel.text(300 - len("BATTLE"), 50, "BATTLE", pyxel.rndi(0,15))
                 GameScene.draw(self)
+            elif self.state == self.RESULT:
+                ResultScene.result_draw(self, self.scores[1], self.scores[2])
         pyxel.circb(self.player_1.x, self.player_1.y, 10, 3)
         pyxel.circb(self.player_2.x, self.player_2.y, 8, 8)
 
@@ -100,5 +104,10 @@ class Game:
             name: button.Button(user=[self.player_1, self.player_2], **layout[name])
             for name in ("start",)
         }
+        self.state = self.TITLE
+
+    def battle_setup(self):
+        GameScene.setup(self)
+        self.state = self.BATTLE
 
 Game()

@@ -1,3 +1,5 @@
+import random
+
 from Card import Card
 from advanced_textbox import AdvancedTextBox
 
@@ -7,7 +9,7 @@ CARD_ROWS = 2
 
 
 def setup(game):
-    # Issue #5 の処理で読み込んだ本のデータから、5列×2行にカードを配る。
+    random.shuffle(game.books)
     game.field_cards = [
         Card(book, *_card_position(index))
         for index, book in enumerate(game.books[:CARDS_PER_ROW * CARD_ROWS])
@@ -79,7 +81,7 @@ def update(game):
         _set_reading_text(game)
 
     game.reading_box.update()
-    # TODO(#8): ゲームの終了を判定し、リザルト画面へ遷移する。
+    return game.reading_index == len(game.books)
 
 
 def draw(game):
