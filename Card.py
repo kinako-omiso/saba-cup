@@ -9,8 +9,8 @@ TITLE_LINE_HEIGHT = 13
 
 
 class Card:
-    WIDTH = 88
-    HEIGHT = 124
+    WIDTH = 119
+    HEIGHT = 168
     TITLE_BAND_WIDTH = WIDTH - COVER_RIGHT_MARGIN
 
     def __init__(self, book, x, y, cover, color):
