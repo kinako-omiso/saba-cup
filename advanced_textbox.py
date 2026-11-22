@@ -17,6 +17,7 @@ class AdvancedTextBox:
         self.text_counter = 0
         self.c = c
         self.size = size
+
         self.s = s ## 表示するフレーム間隔
         self.back_c = back_c
         self.auto_pagination = auto
