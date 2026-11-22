@@ -5,30 +5,38 @@ import button
 
 
 result_text_box = None
-player_1_box = advanced_textbox.AdvancedTextBox(setting.GAME_WINDOW_WIDTH/4 - 43,
-                                                setting.GAME_WINDOW_HIGH/3,
-                                                86, 30, 3, 2, 1, 0, False)
-player_1_box.set_text("PLAYER1 SCORE ")
-player_2_box = advanced_textbox.AdvancedTextBox(setting.GAME_WINDOW_WIDTH/4 * 3 - 43,
-                                                setting.GAME_WINDOW_HIGH/3,
-                                                86, 30, 8, 2, 1, 0, False)
-player_2_box.set_text("PLAYER1 SCORE ")
-
 score_1_box = None
 score_2_box = None
 retry_text = None
 quit_text = None
-retry_text_img = pyxel.Image(280, 80)
-quit_text_img = pyxel.Image(280, 80)
+
 
 fg_once = True
 count = 0
 max_count = 0
 
-def update():
-    pass
+def setup(game):
+    global fg_once
+    global count
+    fg_once = True
+    count = 0
+    game.result_buttons = {}
 
-def draw(game, score_1, score_2):
+
+def result_update(game):
+    if not game.result_buttons:
+        return
+
+    for b in game.result_buttons.values():
+        b.update()
+
+    if game.result_buttons["retry"].pushed:
+        game.battle_setup()
+    elif game.result_buttons["quit"].pushed:
+        game.title_setup()
+
+
+def result_draw(game, score_1, score_2):
 
     global fg_once
     global result_text_box
@@ -44,6 +52,17 @@ def draw(game, score_1, score_2):
     global quit_text_img
 
     if fg_once:
+        player_1_box = advanced_textbox.AdvancedTextBox(setting.GAME_WINDOW_WIDTH/4 - 43,
+                                                        setting.GAME_WINDOW_HIGH/3,
+                                                        86, 30, 3, 2, 1, 0, False)
+        player_1_box.set_text("PLAYER1 SCORE ")
+        player_2_box = advanced_textbox.AdvancedTextBox(setting.GAME_WINDOW_WIDTH/4 * 3 - 43,
+                                                        setting.GAME_WINDOW_HIGH/3,
+                                                        86, 30, 8, 2, 1, 0, False)
+        player_2_box.set_text("PLAYER2 SCORE ")
+
+        retry_text_img = pyxel.Image(280, 80)
+        quit_text_img = pyxel.Image(280, 80)
 
         retry_text = advanced_textbox.AdvancedTextBox(0,0,70,20,8,1,0,6, False)
         retry_text.set_text("もういちど")
@@ -57,7 +76,7 @@ def draw(game, score_1, score_2):
         
 
 
-        game.test_buttons = {
+        game.result_buttons = {
             "retry" : button.Button(setting.GAME_WINDOW_WIDTH/4 -140, setting.GAME_WINDOW_HIGH/4*3,
                                     280, 80, [game.player_1, game.player_2], retry_text_img, False),
             "quit" : button.Button(setting.GAME_WINDOW_WIDTH/4*3 -140, setting.GAME_WINDOW_HIGH/4*3,
@@ -67,12 +86,10 @@ def draw(game, score_1, score_2):
                                                        setting.GAME_WINDOW_HIGH/2,
                                                        len(str(score_1))*12 + 2, 14, 10, 6, 1, 0, False)
         score_1_box.set_text(str(score_1))
-        score_1_box.text_use_x += 3
         score_2_box = advanced_textbox.AdvancedTextBox(setting.GAME_WINDOW_WIDTH/4*3 ,
                                                        setting.GAME_WINDOW_HIGH/2,
                                                        len(str(score_2))*12 + 2, 14, 10, 6, 1, 0, False)
         score_2_box.set_text(str(score_2))
-        score_2_box.text_use_x += 3
 
         result = ""
         if score_1 > score_2:
@@ -93,7 +110,6 @@ def draw(game, score_1, score_2):
                                                                setting.GAME_WINDOW_HIGH/6,
                                                                50, 18, 4, 4, 1, 0, False)
             result_text_box.set_text(result)
-            result_text_box.text_use_x += 2
 
         max_count = len(result) + 30
         fg_once = False
@@ -123,19 +139,8 @@ def draw(game, score_1, score_2):
         score_2_box.draw()
 
     if count == max_count + 17:
-        for name, b in game.test_buttons.items():
+        for b in game.result_buttons.values():
             b.act = True
 
-
-    if game.test_buttons["retry"].pushed != 0:
-        game.state = game.BATTLE
-        game.player_select_setup()
-
-    if game.test_buttons["quit"].pushed != 0:
-        game.state = game.TITLE
-
-    
-    
-    
-
-        
+    for b in game.result_buttons.values():
+        b.draw()

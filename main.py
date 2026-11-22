@@ -8,6 +8,7 @@ import GameScene
 import setting
 import player
 import button
+import ResultScene
 
 
 @dataclass
@@ -39,13 +40,9 @@ class Game:
 
         pyxel.init(setting.GAME_WINDOW_WIDTH, setting.GAME_WINDOW_HIGH, title=setting.TITLE_NAME)
 
-        self.state = self.TITLE
         self.player_1 = player.Player(self, 1)
         self.player_2 = player.Player(self, 2)
-
-        self.test_buttons = {
-            "one" : button.Button(250, 275, 100, 50, [self.player_1, self.player_2]),
-        }
+        self.title_setup()
 
 
         pyxel.run(self.update, self.draw)
@@ -57,18 +54,15 @@ class Game:
 
         # シーン別処理
         if self.state == self.TITLE:
-            for b in self.test_buttons.values():
-                b.update()
-            if self.test_buttons["one"].pushed != 0:
-                GameScene.setup(self)
-                self.state = self.BATTLE
+            self.title_button.update()
+            if self.title_button.pushed:
+                self.battle_setup()
         elif self.state == self.BATTLE:
-            GameScene.update(self)
-
-
-
-
-      
+            if GameScene.update(self):
+                ResultScene.setup(self)
+                self.state = self.RESULT
+        elif self.state == self.RESULT:
+            ResultScene.result_update(self)
 
 
     def draw(self):
@@ -76,13 +70,13 @@ class Game:
 
         # シーン別処理
         if self.state == self.TITLE:
-            for b in self.test_buttons.values():
-                b.draw()
+            self.title_button.draw()
             pyxel.text(300 - len("TITLE"), 50, "TITLE", pyxel.rndi(0,15))
         elif self.state == self.BATTLE:
             pyxel.text(300 - len("BATTLE"), 50, "BATTLE", pyxel.rndi(0,15))
             GameScene.draw(self)
-
+        elif self.state == self.RESULT:
+            ResultScene.result_draw(self, self.scores[1], self.scores[2])
         pyxel.circb(self.player_1.x, self.player_1.y, 10, 3)
         pyxel.circb(self.player_2.x, self.player_2.y, 10, 8)
 
@@ -95,8 +89,11 @@ class Game:
 
 
     def title_setup(self):
-        self.test_buttons = {
-            "one" : button.Button(250, 275, 100, 50, [self.player_1, self.player_2]),
-        }
+        self.title_button = button.Button(250, 275, 100, 50, [self.player_1, self.player_2])
+        self.state = self.TITLE
+
+    def battle_setup(self):
+        GameScene.setup(self)
+        self.state = self.BATTLE
 
 Game()
