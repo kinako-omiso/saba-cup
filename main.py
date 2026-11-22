@@ -1,7 +1,6 @@
 import json
 import random
 from dataclasses import dataclass
-from pathlib import Path
 
 import pyxel
 import GameScene
@@ -32,13 +31,19 @@ class Game:
     def __init__(self):
 
         ## jsonファイルから本の情報を読み込む
-        with (Path(__file__).with_name("data") / "books.json").open(encoding="utf-8") as books_file:
+        with open("data/books.json", encoding="utf-8") as books_file:
             self.books = [Book(**book) for book in json.load(books_file)]
         random.shuffle(self.books)
         self.book_index = 0
         ## jsonファイルから本の情報を読み込む処理はここまで
 
-        pyxel.init(setting.GAME_WINDOW_WIDTH, setting.GAME_WINDOW_HIGH, title=setting.TITLE_NAME)
+        pyxel.init(
+            setting.GAME_WINDOW_WIDTH,
+            setting.GAME_WINDOW_HIGH,
+            title=setting.TITLE_NAME,
+            display_scale=1,
+        )
+        pyxel.colors[:] = list(pyxel.colors) + GameScene.BATTLE_PALETTE
 
         self.player_1 = player.Player(self, 1)
         self.player_2 = player.Player(self, 2)
@@ -71,25 +76,32 @@ class Game:
         # シーン別処理
         if self.state == self.TITLE:
             self.title_button.draw()
-            pyxel.text(300 - len("TITLE"), 50, "TITLE", pyxel.rndi(0,15))
+            title = "TITLE"
+            pyxel.text((setting.GAME_WINDOW_WIDTH - len(title) * 4) // 2, 50, title, 7)
+            label = "START"
+            pyxel.text(
+                (setting.GAME_WINDOW_WIDTH - len(label) * 4) // 2,
+                self.title_button.y + (self.title_button.h - 6) // 2,
+                label,
+                7,
+            )
         elif self.state == self.BATTLE:
-            pyxel.text(300 - len("BATTLE"), 50, "BATTLE", pyxel.rndi(0,15))
             GameScene.draw(self)
         elif self.state == self.RESULT:
             ResultScene.result_draw(self, self.scores[1], self.scores[2])
-        pyxel.circb(self.player_1.x, self.player_1.y, 10, 3)
-        pyxel.circb(self.player_2.x, self.player_2.y, 10, 8)
-
-
-        # if pyxel.btn(pyxel.GAMEPAD1_BUTTON_A):
-        #     pyxel.text(300, 300, "OK!!", 11)
-
-        # print(pyxel.btnv(pyxel.GAMEPAD1_AXIS_LEFTX), pyxel.btnv(pyxel.GAMEPAD1_AXIS_LEFTY))
-
+        for player in (self.player_1, self.player_2):
+            pyxel.circb(player.x, player.y, 10, setting.PLAYER_COLORS[player.num])
 
 
     def title_setup(self):
-        self.title_button = button.Button(250, 275, 100, 50, [self.player_1, self.player_2])
+        width, height = 100, 50
+        self.title_button = button.Button(
+            (setting.GAME_WINDOW_WIDTH - width) // 2,
+            (setting.GAME_WINDOW_HIGH - height) // 2,
+            width,
+            height,
+            [self.player_1, self.player_2],
+        )
         self.state = self.TITLE
 
     def battle_setup(self):

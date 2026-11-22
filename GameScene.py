@@ -1,49 +1,106 @@
 import random
 
+import pyxel
+
 from Card import Card
-from advanced_textbox import AdvancedTextBox
+from advanced_textbox import AdvancedTextBox, FONT_PATH, normal_font
+from setting import GAME_WINDOW_WIDTH, PLAYER_COLORS
 
 
 CARDS_PER_ROW = 5
 CARD_ROWS = 2
+CARD_GAP = 12
+FIRST_CARD_Y = 150
+CARD_ROW_STEP = Card.HEIGHT + CARD_GAP
+HINT_LABELS = ("ヒント1", "ヒント2", "答え")
+HINT_PAUSE_FRAMES = 60
+READING_PANEL = (20, 16, 440, 116)
+SCORE_PANEL = (472, 16, 96, 116)
+
+BATTLE_PALETTE = [
+    0x292F58, 0x884650, 0xD78445, 0xEEEEEE,
+    0xA8BDF6, 0xECC5AE, 0x73C5AB, 0xFF9999, 0xEBC15B,
+]
+BACKGROUND, SHELF, WOOD, PAPER = range(16, 20)
+COVER_COLORS = (20, 21, 22, 23, 24, PAPER, WOOD)
+reading_font = pyxel.Font(FONT_PATH, 16)
+score_font = pyxel.Font(FONT_PATH, 20)
 
 
 def setup(game):
     random.shuffle(game.books)
+    game.covers = {
+        assets: _load_cover(assets)
+        for assets in {book.assets for book in game.books if book.assets}
+    }
     game.field_cards = [
-        Card(book, *_card_position(index))
+        _make_card(game, book, index)
         for index, book in enumerate(game.books[:CARDS_PER_ROW * CARD_ROWS])
     ]
     game.book_index = len(game.field_cards)
     game.reading_index = 0
-    game.reading_box = AdvancedTextBox(40, 390, 520, 120, 7, 1, s=15, auto=False) ##sで表示するフレーム間隔を指定
-    _set_reading_text(game)
+    panel_x, panel_y, panel_width, _ = READING_PANEL
+    game.reading_box = AdvancedTextBox(
+        panel_x + 12, panel_y + 27, panel_width - 24, 88,
+        BACKGROUND, 1, back_c=PAPER, auto=False,
+        font=reading_font, line_height=17, left_aligned=True,
+    )
+    if game.books:
+        _start_question(game)
     game.scores = {1: 0, 2: 0}
     game.card_confirm_held = {
         player.num: player.interaction for player in (game.player_1, game.player_2)
     }
-    # 場の座標と、その位置にあるカードのタイトルを確認する。
-    for card in game.field_cards:
-        print(f"({card.x}, {card.y}) {card.book.title}")
 
 
-def _card_position(index):
+def _load_cover(assets):
+    try:
+        return pyxel.Image.from_image(assets)
+    except Exception:
+        return None
+
+
+def _make_card(game, book, index):
     row, column = divmod(index, CARDS_PER_ROW)
-    return 40 + column * 108, 80 + row * 148
+    row_width = CARDS_PER_ROW * Card.WIDTH + (CARDS_PER_ROW - 1) * CARD_GAP
+    x = (GAME_WINDOW_WIDTH - row_width) // 2 + column * (Card.WIDTH + CARD_GAP)
+    y = FIRST_CARD_Y + row * CARD_ROW_STEP
+    color = COVER_COLORS[(book.id - 1) % len(COVER_COLORS)]
+    return Card(book, x, y, game.covers.get(book.assets), color)
 
 
-def _set_reading_text(game):
-    text = ""
-    if game.reading_index < len(game.books):
-        book = game.books[game.reading_index]
-        text = "\n".join((book.opening_hint, book.famous_passage_hint, book.title))
-    game.reading_box.set_text(text)
+def _start_question(game):
+    book = game.books[game.reading_index]
+    game.hint_texts = (book.opening_hint, book.famous_passage_hint, book.title)
+    game.hint_index = 0
+    game.hint_switch_frame = None
+    game.reading_box.set_text(game.hint_texts[0])
+
+
+def _update_reading(game):
+    frame = pyxel.frame_count
+    if game.hint_switch_frame is not None and frame >= game.hint_switch_frame:
+        game.hint_index += 1
+        game.hint_switch_frame = None
+        game.reading_box.set_text(game.hint_texts[game.hint_index])
+
+    box = game.reading_box
+    box.update()
+    if (
+        game.hint_index < len(HINT_LABELS) - 1
+        and game.hint_switch_frame is None
+        and box.text_counter == len(box.text)
+    ):
+        game.hint_switch_frame = frame + HINT_PAUSE_FRAMES
 
 
 def update(game):
+    if game.reading_index == len(game.books):
+        return True
+
     # すでに一文字以上表示されている問題だけ、札を取れる。
     answer_book = None
-    if game.reading_box.text_counter > 0:
+    if game.hint_index > 0 or game.reading_box.text_counter > 0:
         answer_book = game.books[game.reading_index]
 
     # 同じフレームの選択を集めてから、場のカードを取り除く。
@@ -70,22 +127,46 @@ def update(game):
         # 山札が残っていれば、空いた位置に補充して場を10枚に戻す。
         if game.book_index < len(game.books):
             book = game.books[game.book_index]
-            card = Card(book, *_card_position(index))
-            game.field_cards[index] = card
+            game.field_cards[index] = _make_card(game, book, index)
             game.book_index += 1
-            print(f"({card.x}, {card.y}) {card.book.title}")
         # カードを取ったプレイヤーに1点を加える。
         game.scores[player_num] += 1
-        print(f"1P: {game.scores[1]}  2P: {game.scores[2]}")
         game.reading_index += 1
-        _set_reading_text(game)
+        if game.reading_index == len(game.books):
+            return True
+        _start_question(game)
 
-    game.reading_box.update()
-    return game.reading_index == len(game.books)
+    _update_reading(game)
+    return False
 
 
 def draw(game):
+    pyxel.cls(BACKGROUND)
+    pyxel.rect(*READING_PANEL, PAPER)
+    pyxel.rectb(*READING_PANEL, SHELF)
+    if game.books:
+        panel_x, panel_y, _, _ = READING_PANEL
+        label = f"第{game.reading_index + 1}問 / {len(game.books)}  {HINT_LABELS[game.hint_index]}"
+        pyxel.text(panel_x + 12, panel_y + 7, label, SHELF, normal_font)
+        game.reading_box.draw()
+
+    score_x, score_y, score_width, _ = SCORE_PANEL
+    pyxel.rect(*SCORE_PANEL, PAPER)
+    pyxel.rectb(*SCORE_PANEL, SHELF)
+    for number, row_y in ((1, score_y + 13), (2, score_y + 69)):
+        color = PLAYER_COLORS[number]
+        pyxel.rect(score_x + 10, row_y + 1, 4, 22, color)
+        pyxel.text(score_x + 20, row_y + 5, f"{number}P", BACKGROUND, normal_font)
+        score = str(game.scores[number])
+        score_right = score_x + score_width - 10
+        pyxel.text(score_right - score_font.text_width(score), row_y, score, color, score_font)
+
+    shelf_x, shelf_y, shelf_width, shelf_height = 28, 136, GAME_WINDOW_WIDTH - 56, 291
+    pyxel.rect(shelf_x, shelf_y, 8, shelf_height, WOOD)
+    pyxel.rect(shelf_x + shelf_width - 8, shelf_y, 8, shelf_height, WOOD)
+    pyxel.rect(shelf_x, shelf_y, shelf_width, 8, SHELF)
+    pyxel.rect(shelf_x, FIRST_CARD_Y + Card.HEIGHT, shelf_width, CARD_GAP, SHELF)
+    pyxel.rect(shelf_x, FIRST_CARD_Y + CARD_ROW_STEP + Card.HEIGHT, shelf_width, 17, SHELF)
     for card in game.field_cards:
         if card is not None:
             card.draw()
-    game.reading_box.draw()
