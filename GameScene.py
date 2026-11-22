@@ -23,6 +23,7 @@ SHELF_TOP_Y = FIRST_CARD_Y - 14
 PANEL_HEIGHT = SHELF_TOP_Y - VERTICAL_MARGIN - 4
 HINT_LABELS = ("ヒント1", "ヒント2", "答え")
 HINT_PAUSE_FRAMES = FPS * 5
+WRONG_CARD_PENALTY_FRAMES = FPS * 3
 READING_PANEL = (BATTLE_X + 20, VERTICAL_MARGIN, BATTLE_WIDTH - 148, PANEL_HEIGHT)
 SCORE_PANEL = (BATTLE_X + BATTLE_WIDTH - 116, VERTICAL_MARGIN, 96, PANEL_HEIGHT)
 PALETTE_LIMIT = 256
@@ -70,6 +71,7 @@ def setup(game):
     if game.books:
         _start_question(game)
     game.scores = {1: 0, 2: 0}
+    game.card_penalty_until = {1: 0, 2: 0}
     game.card_confirm_held = {
         player.num: player.interaction for player in (game.player_1, game.player_2)
     }
@@ -125,18 +127,22 @@ def update(game):
         answer_book = game.books[game.reading_index]
 
     # 同じフレームの選択を集めてから、場のカードを取り除く。
+    frame = pyxel.frame_count
     selections = {}
     for player in (game.player_1, game.player_2):
         was_held = game.card_confirm_held[player.num]
         game.card_confirm_held[player.num] = player.interaction
         if not player.interaction or was_held or answer_book is None:
             continue
+        if frame < game.card_penalty_until[player.num]:
+            continue
 
-        # 決定ボタンを押した瞬間に、正解の札にポインターが重なっているか確認する。
         for index, card in enumerate(game.field_cards):
-            if card is None or card.book.id != answer_book.id:
+            if card is None or not card.contains(player.x, player.y):
                 continue
-            if card.contains(player.x, player.y):
+            if card.book.id != answer_book.id:
+                game.card_penalty_until[player.num] = frame + WRONG_CARD_PENALTY_FRAMES
+            else:
                 # 同じカードを選んだら中心に近い方を優先する。同距離なら1P。
                 priority = (card.distance_squared(player.x, player.y), player.num)
                 if index not in selections or priority < selections[index]:
@@ -182,6 +188,10 @@ def draw(game):
         score = str(game.scores[number])
         score_right = score_x + score_width - 10
         pyxel.text(score_right - score_font.text_width(score), row_y, score, color, score_font)
+        remaining_frames = game.card_penalty_until[number] - pyxel.frame_count
+        if remaining_frames > 0:
+            remaining_seconds = (remaining_frames + FPS - 1) // FPS
+            pyxel.text(score_x + 20, row_y + 25, f"おてつき {remaining_seconds}秒", BACKGROUND, normal_font)
 
     shelf_x = BATTLE_X + 28
     shelf_width, shelf_height = BATTLE_WIDTH - 56, SHELF_BOTTOM_Y - SHELF_TOP_Y
