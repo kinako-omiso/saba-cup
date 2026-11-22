@@ -3,13 +3,15 @@ import setting
 import ui
 
 
+title_image = pyxel.Image.from_image(str(setting.BASE_PATH / "assets/images/title.png"))
+
+
 def title_button_layout():
-    x = setting.GAME_WINDOW_WIDTH // 2
+    x = 190
     return {
         "start": dict(x=x, y=340, w=240, h=60, label="対戦開始", align="center"),
     }
 
 
 def draw():
-    pyxel.cls(1)
-    ui.draw_text(setting.GAME_WINDOW_WIDTH // 2, 170, 3, setting.TITLE_NAME, 7, align="center")
+    ui.draw_image(0, 0, title_image)
