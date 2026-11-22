@@ -16,6 +16,10 @@ player_2_box.set_text("PLAYER1 SCORE ")
 
 score_1_box = None
 score_2_box = None
+retry_text = None
+quit_text = None
+retry_text_img = pyxel.Image(280, 80)
+quit_text_img = pyxel.Image(280, 80)
 
 fg_once = True
 count = 0
@@ -34,13 +38,30 @@ def draw(game, score_1, score_2):
     global player_2_box
     global score_1_box
     global score_2_box
+    global retry_text
+    global quit_text
+    global retry_text_img
+    global quit_text_img
 
     if fg_once:
+
+        retry_text = advanced_textbox.AdvancedTextBox(0,0,70,20,8,1,0,6, False)
+        retry_text.set_text("もういちど")
+        retry_text.update()
+        retry_text_img.blt(105,30,retry_text.img,0,0,retry_text.w, retry_text.h, None, scale=4)
+
+        quit_text = advanced_textbox.AdvancedTextBox(0,0,70,20,2,1,0,1, False)
+        quit_text.set_text("タイトルへ")
+        quit_text.update()
+        quit_text_img.blt(105,30,quit_text.img,0,0,quit_text.w, quit_text.h, None, scale=4)
+        
+
+
         game.test_buttons = {
-            "retry" : button.Button(setting.GAME_WINDOW_WIDTH/4 -120, setting.GAME_WINDOW_HIGH/4*3,
-                                    240, 80, [game.player_1, game.player_2], [], False),
-            "quit" : button.Button(setting.GAME_WINDOW_WIDTH/4*3 -120, setting.GAME_WINDOW_HIGH/4*3,
-                                    240, 80, [game.player_1, game.player_2], [], False),
+            "retry" : button.Button(setting.GAME_WINDOW_WIDTH/4 -140, setting.GAME_WINDOW_HIGH/4*3,
+                                    280, 80, [game.player_1, game.player_2], retry_text_img, False),
+            "quit" : button.Button(setting.GAME_WINDOW_WIDTH/4*3 -140, setting.GAME_WINDOW_HIGH/4*3,
+                                    280, 80, [game.player_1, game.player_2], quit_text_img, False),
         }
         score_1_box = advanced_textbox.AdvancedTextBox(setting.GAME_WINDOW_WIDTH/4 ,
                                                        setting.GAME_WINDOW_HIGH/2,
@@ -106,7 +127,12 @@ def draw(game, score_1, score_2):
             b.act = True
 
 
+    if game.test_buttons["retry"].pushed != 0:
+        game.state = game.BATTLE
+        game.player_select_setup()
 
+    if game.test_buttons["quit"].pushed != 0:
+        game.state = game.TITLE
 
     
     

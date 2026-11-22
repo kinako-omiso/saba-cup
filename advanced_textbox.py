@@ -30,6 +30,9 @@ class AdvancedTextBox:
         self.text_use_y = self.y_h / 2
 
     def update(self):
+        if self.s == 0:
+            self.img.text(self.text_use_x, self.text_use_y, self.text, self.c, normal_font)
+            return
 
         if pyxel.frame_count % self.s != 0:
             return
