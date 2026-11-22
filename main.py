@@ -44,6 +44,7 @@ class Game:
             display_scale=1,
         )
         pyxel.colors[:] = list(pyxel.colors) + GameScene.BATTLE_PALETTE
+        self.covers = GameScene.load_covers(self.books)
 
         self.player_1 = player.Player(self, 1)
         self.player_2 = player.Player(self, 2)

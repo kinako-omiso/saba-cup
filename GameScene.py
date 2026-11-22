@@ -13,9 +13,10 @@ CARD_GAP = 12
 FIRST_CARD_Y = 150
 CARD_ROW_STEP = Card.HEIGHT + CARD_GAP
 HINT_LABELS = ("ヒント1", "ヒント2", "答え")
-HINT_PAUSE_FRAMES = 60
+HINT_PAUSE_FRAMES = 150
 READING_PANEL = (20, 16, 440, 116)
 SCORE_PANEL = (472, 16, 96, 116)
+PALETTE_LIMIT = 256
 
 BATTLE_PALETTE = [
     0x292F58, 0x884650, 0xD78445, 0xEEEEEE,
@@ -27,12 +28,24 @@ reading_font = pyxel.Font(FONT_PATH, 16)
 score_font = pyxel.Font(FONT_PATH, 20)
 
 
+def load_covers(books):
+    paths = sorted({book.assets for book in books if book.assets})
+    palette = list(pyxel.colors)
+    cover_colors = set()
+    try:
+        # include_colors は現在のパレットを画像の色で置き換える。
+        for path in paths:
+            if _load_cover(path, include_colors=True) is not None:
+                cover_colors.update(pyxel.colors)
+    finally:
+        added_colors = sorted(cover_colors.difference(palette))
+        pyxel.colors[:] = palette + added_colors[:PALETTE_LIMIT - len(palette)]
+
+    return {path: _load_cover(path) for path in paths}
+
+
 def setup(game):
     random.shuffle(game.books)
-    game.covers = {
-        assets: _load_cover(assets)
-        for assets in {book.assets for book in game.books if book.assets}
-    }
     game.field_cards = [
         _make_card(game, book, index)
         for index, book in enumerate(game.books[:CARDS_PER_ROW * CARD_ROWS])
@@ -53,9 +66,9 @@ def setup(game):
     }
 
 
-def _load_cover(assets):
+def _load_cover(assets, *, include_colors=False):
     try:
-        return pyxel.Image.from_image(assets)
+        return pyxel.Image.from_image(assets, include_colors=include_colors)
     except Exception:
         return None
 
