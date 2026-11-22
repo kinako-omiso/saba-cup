@@ -1,7 +1,7 @@
 import pyxel
 
 class Button:
-    def __init__(self, x, y, w, h, user, img=[], act=True):
+    def __init__(self, x, y, w, h, user, img=None, act=True):
 
         self.x = x
         self.y = y
@@ -36,9 +36,11 @@ class Button:
 
 
     def draw(self):
+        if self.act:
+            if self.ui_is_on:
+                pyxel.rectb(self.x - 1, self.y - 1, self.w + 2, self.h + 2, pyxel.rndi(0, 15))
 
-        if self.ui_is_on:
-            pyxel.rectb(self.x - 1, self.y - 1, self.w + 2, self.h + 2, pyxel.rndi(0, 15))
-        
-        if self.img == []:
-            pyxel.rect(self.x, self.y, self.w, self.h, 13)
+            if self.img is None:
+                pyxel.rect(self.x, self.y, self.w, self.h, 13)
+            else:
+                pyxel.blt(self.x, self.y, self.img, 0, 0, self.w, self.h)
