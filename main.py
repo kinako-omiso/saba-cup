@@ -5,6 +5,8 @@ from pathlib import Path
 
 import pyxel
 import GameScene
+import ui
+import ui_title
 import setting
 import player
 import button
@@ -38,10 +40,13 @@ class Game:
         self.book_index = 0
         ## jsonファイルから本の情報を読み込む処理はここまで
 
-        pyxel.init(setting.GAME_WINDOW_WIDTH, setting.GAME_WINDOW_HIGH, title=setting.TITLE_NAME)
+        pyxel.init(setting.GAME_WINDOW_WIDTH, setting.GAME_WINDOW_HIGH,
+                   title=setting.TITLE_NAME, fps=setting.FPS)
 
         self.player_1 = player.Player(self, 1)
         self.player_2 = player.Player(self, 2)
+
+        self.ui = ui.UI(self.books)
         self.title_setup()
 
 
@@ -54,8 +59,9 @@ class Game:
 
         # シーン別処理
         if self.state == self.TITLE:
-            self.title_button.update()
-            if self.title_button.pushed:
+            for b in self.buttons.values():
+                b.update()
+            if self.buttons["start"].pushed != 0:
                 self.battle_setup()
         elif self.state == self.BATTLE:
             if GameScene.update(self):
@@ -65,20 +71,24 @@ class Game:
             ResultScene.result_update(self)
 
 
-    def draw(self):
-        pyxel.cls(0)
 
+
+
+
+    def draw(self):
         # シーン別処理
         if self.state == self.TITLE:
-            self.title_button.draw()
-            pyxel.text(300 - len("TITLE"), 50, "TITLE", pyxel.rndi(0,15))
-        elif self.state == self.BATTLE:
-            pyxel.text(300 - len("BATTLE"), 50, "BATTLE", pyxel.rndi(0,15))
-            GameScene.draw(self)
-        elif self.state == self.RESULT:
-            ResultScene.result_draw(self, self.scores[1], self.scores[2])
+            ui_title.draw()
+            self.ui.draw_buttons(self.buttons)
+        else:
+            pyxel.cls(0)
+            if self.state == self.BATTLE:
+                pyxel.text(300 - len("BATTLE"), 50, "BATTLE", pyxel.rndi(0,15))
+                GameScene.draw(self)
+            elif self.state == self.RESULT:
+                ResultScene.result_draw(self, self.scores[1], self.scores[2])
         pyxel.circb(self.player_1.x, self.player_1.y, 10, 3)
-        pyxel.circb(self.player_2.x, self.player_2.y, 10, 8)
+        pyxel.circb(self.player_2.x, self.player_2.y, 8, 8)
 
 
         # if pyxel.btn(pyxel.GAMEPAD1_BUTTON_A):
@@ -89,7 +99,11 @@ class Game:
 
 
     def title_setup(self):
-        self.title_button = button.Button(250, 275, 100, 50, [self.player_1, self.player_2])
+        layout = ui_title.title_button_layout()
+        self.buttons = {
+            name: button.Button(user=[self.player_1, self.player_2], **layout[name])
+            for name in ("start",)
+        }
         self.state = self.TITLE
 
     def battle_setup(self):
