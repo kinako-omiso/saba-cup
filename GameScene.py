@@ -10,16 +10,21 @@ from setting import BASE_PATH, FONT_PATH, FPS, GAME_WINDOW_HIGH, GAME_WINDOW_WID
 CARDS_PER_ROW = 5
 CARD_ROWS = 2
 CARD_GAP = 12
-BATTLE_WIDTH = 588
-BATTLE_HEIGHT = 441
-BATTLE_X = (GAME_WINDOW_WIDTH - BATTLE_WIDTH) // 2
-BATTLE_Y = (GAME_WINDOW_HIGH - BATTLE_HEIGHT) // 2
-FIRST_CARD_Y = BATTLE_Y + 150
+CARD_ROW_WIDTH = CARDS_PER_ROW * Card.WIDTH + (CARDS_PER_ROW - 1) * CARD_GAP
 CARD_ROW_STEP = Card.HEIGHT + CARD_GAP
+BATTLE_WIDTH = CARD_ROW_WIDTH + 100
+BATTLE_X = (GAME_WINDOW_WIDTH - BATTLE_WIDTH) // 2
+VERTICAL_MARGIN = 8
+SHELF_BOTTOM_HEIGHT = 14
+SHELF_BOTTOM_Y = GAME_WINDOW_HIGH - VERTICAL_MARGIN
+CARDS_BOTTOM_Y = SHELF_BOTTOM_Y - SHELF_BOTTOM_HEIGHT
+FIRST_CARD_Y = CARDS_BOTTOM_Y - Card.HEIGHT - (CARD_ROWS - 1) * CARD_ROW_STEP
+SHELF_TOP_Y = FIRST_CARD_Y - 14
+PANEL_HEIGHT = SHELF_TOP_Y - VERTICAL_MARGIN - 4
 HINT_LABELS = ("ヒント1", "ヒント2", "答え")
 HINT_PAUSE_FRAMES = FPS * 5
-READING_PANEL = (BATTLE_X + 20, BATTLE_Y + 16, 440, 116)
-SCORE_PANEL = (BATTLE_X + 472, BATTLE_Y + 16, 96, 116)
+READING_PANEL = (BATTLE_X + 20, VERTICAL_MARGIN, BATTLE_WIDTH - 148, PANEL_HEIGHT)
+SCORE_PANEL = (BATTLE_X + BATTLE_WIDTH - 116, VERTICAL_MARGIN, 96, PANEL_HEIGHT)
 PALETTE_LIMIT = 256
 
 BATTLE_PALETTE = [
@@ -56,9 +61,9 @@ def setup(game):
     ]
     game.book_index = len(game.field_cards)
     game.reading_index = 0
-    panel_x, panel_y, panel_width, _ = READING_PANEL
+    panel_x, panel_y, panel_width, panel_height = READING_PANEL
     game.reading_box = AdvancedTextBox(
-        panel_x + 12, panel_y + 27, panel_width - 24, 88,
+        panel_x + 12, panel_y + 27, panel_width - 24, panel_height - 28,
         BACKGROUND, 1, s=FPS // 2, back_c=PAPER, auto=False,
         font=reading_font, line_height=17, left_aligned=True,
     )
@@ -79,8 +84,7 @@ def _load_cover(assets, *, include_colors=False):
 
 def _make_card(game, book, index):
     row, column = divmod(index, CARDS_PER_ROW)
-    row_width = CARDS_PER_ROW * Card.WIDTH + (CARDS_PER_ROW - 1) * CARD_GAP
-    x = (GAME_WINDOW_WIDTH - row_width) // 2 + column * (Card.WIDTH + CARD_GAP)
+    x = BATTLE_X + 50 + column * (Card.WIDTH + CARD_GAP)
     y = FIRST_CARD_Y + row * CARD_ROW_STEP
     color = COVER_COLORS[(book.id - 1) % len(COVER_COLORS)]
     return Card(book, x, y, game.covers.get(book.assets), color)
@@ -167,10 +171,11 @@ def draw(game):
         pyxel.text(panel_x + 12, panel_y + 7, label, SHELF, normal_font)
         game.reading_box.draw()
 
-    score_x, score_y, score_width, _ = SCORE_PANEL
+    score_x, score_y, score_width, score_height = SCORE_PANEL
     pyxel.rect(*SCORE_PANEL, PAPER)
     pyxel.rectb(*SCORE_PANEL, SHELF)
-    for number, row_y in ((1, score_y + 13), (2, score_y + 69)):
+    for number in (1, 2):
+        row_y = score_y + score_height * (2 * number - 1) // 4 - 11
         color = PLAYER_COLORS[number]
         pyxel.rect(score_x + 10, row_y + 1, 4, 22, color)
         pyxel.text(score_x + 20, row_y + 5, f"{number}P", BACKGROUND, normal_font)
@@ -178,13 +183,13 @@ def draw(game):
         score_right = score_x + score_width - 10
         pyxel.text(score_right - score_font.text_width(score), row_y, score, color, score_font)
 
-    shelf_x, shelf_y = BATTLE_X + 28, BATTLE_Y + 136
-    shelf_width, shelf_height = BATTLE_WIDTH - 56, 291
-    pyxel.rect(shelf_x, shelf_y, 8, shelf_height, WOOD)
-    pyxel.rect(shelf_x + shelf_width - 8, shelf_y, 8, shelf_height, WOOD)
-    pyxel.rect(shelf_x, shelf_y, shelf_width, 8, SHELF)
+    shelf_x = BATTLE_X + 28
+    shelf_width, shelf_height = BATTLE_WIDTH - 56, SHELF_BOTTOM_Y - SHELF_TOP_Y
+    pyxel.rect(shelf_x, SHELF_TOP_Y, 8, shelf_height, WOOD)
+    pyxel.rect(shelf_x + shelf_width - 8, SHELF_TOP_Y, 8, shelf_height, WOOD)
+    pyxel.rect(shelf_x, SHELF_TOP_Y, shelf_width, 8, SHELF)
     pyxel.rect(shelf_x, FIRST_CARD_Y + Card.HEIGHT, shelf_width, CARD_GAP, SHELF)
-    pyxel.rect(shelf_x, FIRST_CARD_Y + CARD_ROW_STEP + Card.HEIGHT, shelf_width, 17, SHELF)
+    pyxel.rect(shelf_x, CARDS_BOTTOM_Y, shelf_width, SHELF_BOTTOM_HEIGHT, SHELF)
     for card in game.field_cards:
         if card is not None:
             card.draw()
