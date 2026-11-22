@@ -1,10 +1,10 @@
 import pyxel
 
-from advanced_textbox import FONT_PATH
+import setting
 
 
 TITLE_FONT_SIZE = 10
-title_font = pyxel.Font(FONT_PATH, TITLE_FONT_SIZE)
+title_font = pyxel.Font(str(setting.FONT_PATH), TITLE_FONT_SIZE)
 
 
 class Card:
