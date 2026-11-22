@@ -3,7 +3,15 @@ import setting
 import ui
 
 
-title_image = pyxel.Image.from_image(str(setting.BASE_PATH / "assets/images/title.png"))
+TITLE_IMAGE_PATH = str(setting.BASE_PATH / "assets/title.png")
+
+
+def load_image():
+    palette = list(pyxel.colors)
+    pyxel.Image.from_image(TITLE_IMAGE_PATH, include_colors=True)
+    title_colors = [color for color in pyxel.colors if color not in palette]
+    pyxel.colors[:] = palette + title_colors
+    return pyxel.Image.from_image(TITLE_IMAGE_PATH)
 
 
 def title_button_layout():
@@ -13,5 +21,5 @@ def title_button_layout():
     }
 
 
-def draw():
-    ui.draw_image(0, 0, title_image)
+def draw(image):
+    ui.draw_image(0, 0, image)
